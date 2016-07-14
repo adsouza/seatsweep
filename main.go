@@ -23,7 +23,7 @@ const (
 var (
 	address   = flag.String("address", ":8877", "Address for the server to bind on.")
 	debug     = flag.Bool("debug", false, "Run the server in debug/development mode.")
-	staticDir = flag.String("staticdir", "static", "Directory where the static files are stored."+
+	staticDir = flag.String("staticdir", "static", "Directory where the static files are stored. "+
 		"If not absolute, will be joined to the current working directory.")
 )
 
