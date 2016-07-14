@@ -5,22 +5,22 @@
 package main
 
 import (
-	"testing"
-	"os"
-	"net/http/httptest"
 	"net/http"
+	"net/http/httptest"
+	"os"
 	"strings"
+	"testing"
 )
 
-// If debug isn't set, a HTTP request should redirect to HTTPS. 
+// If debug isn't set, a HTTP request should redirect to HTTPS.
 func TestHTTPToHTTPSRedirectWhenNotDebug(t *testing.T) {
 
-	tester := httptest.NewRecorder() 
+	tester := httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "http://test.com", nil)
 	if err != nil {
 		t.Fatal(err)
-	} 
-	
+	}
+
 	redirectHTTPS(tester, req)
 
 	if tester.Code != http.StatusMovedPermanently {

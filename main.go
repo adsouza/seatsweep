@@ -5,14 +5,14 @@
 package main
 
 import (
-    "fmt"
-    "log"
-    "net/http"
-    "os"
-    "flag"
-    "strings"
-    "github.com/gorilla/mux"
-    "path/filepath"
+	"flag"
+	"fmt"
+	"github.com/gorilla/mux"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 const (
@@ -21,10 +21,10 @@ const (
 )
 
 var (
-	address = flag.String("address", ":8877", "Address for the server to bind on.")
-	debug = flag.Bool("debug", false, "Run the server in debug/development mode.")
-	staticDir = flag.String("staticdir", "static", "Directory where the static files are stored." +
-	                                               "If not absolute, will be joined to the current working directory.")
+	address   = flag.String("address", ":8877", "Address for the server to bind on.")
+	debug     = flag.Bool("debug", false, "Run the server in debug/development mode.")
+	staticDir = flag.String("staticdir", "static", "Directory where the static files are stored."+
+		"If not absolute, will be joined to the current working directory.")
 )
 
 func init() {
@@ -42,18 +42,18 @@ func redirectHTTPS(w http.ResponseWriter, r *http.Request) {
 
 	redirectURL := *r.URL
 	redirectURL.Scheme = "https"
-	redirectURL.Host = r.Header.Get("X-Forwarded-Host")	
+	redirectURL.Host = r.Header.Get("X-Forwarded-Host")
 
 	w.Header().Set("Strict-Transport-Security", "max-age=31536000; preload")
 
-    http.Redirect(w, r, redirectURL.String(), http.StatusMovedPermanently)    
+	http.Redirect(w, r, redirectURL.String(), http.StatusMovedPermanently)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "Hi there!")
+	fmt.Fprintf(w, "Hi there!")
 }
 
-func main() {  
+func main() {
 
 	// Process the flags.
 	flag.Parse()
@@ -65,22 +65,22 @@ func main() {
 	r := mux.NewRouter().StrictSlash(true)
 
 	// Redirect to HTTPS if not in debug mode
-	if ! *debug {
-       	r.Headers("X-Forwarded-Proto", "http").MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
-            return r.Header.Get("X-Forwarded-Host") != ""
-        }).HandlerFunc(redirectHTTPS)
+	if !*debug {
+		r.Headers("X-Forwarded-Proto", "http").MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
+			return r.Header.Get("X-Forwarded-Host") != ""
+		}).HandlerFunc(redirectHTTPS)
 	}
 
-    r.HandleFunc("/", handler)
+	r.HandleFunc("/", handler)
 
-    absStaticDir, err := filepath.Abs(*staticDir)
-    if err != nil {
-    	log.Fatalf("Error building absolute path to static directory:\n%v", err)
-    }    
+	absStaticDir, err := filepath.Abs(*staticDir)
+	if err != nil {
+		log.Fatalf("Error building absolute path to static directory:\n%v", err)
+	}
 
-    r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(absStaticDir))))
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(absStaticDir))))
 
-    log.Fatalf("FATAL: %v", http.ListenAndServe(*address, r))
+	log.Fatalf("FATAL: %v", http.ListenAndServe(*address, r))
 }
 
 // If any flags are not set, use environment variables to set them.
@@ -123,4 +123,3 @@ func overrideUnsetFlagsFromEnvironmentVariables() {
 		}
 	}
 }
-
