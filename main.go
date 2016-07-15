@@ -5,9 +5,12 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/oxtoacart/bpool"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -21,10 +24,21 @@ const (
 )
 
 var (
+
+	// Command Line Flags for the Server
 	address   = flag.String("address", ":8877", "Address for the server to bind on.")
 	debug     = flag.Bool("debug", false, "Run the server in debug/development mode.")
 	staticDir = flag.String("staticdir", "static", "Directory where the static files are stored. "+
 		"If not absolute, will be joined to the current working directory.")
+	templatesDir = flag.String("templatesdir", "templates", "Directory where the template files are stored. "+
+		"If not absolute, will be joined to the current working directory.")
+
+	// A shared BufferPool for executing templates.
+	// This is used to catch errors before sending the result to the client.
+	bufpool *bpool.SizedBufferPool
+
+	// The html templates we will use when rending web pages for the client.
+	htmlTemplates map[string]*template.Template
 )
 
 func init() {
@@ -36,10 +50,12 @@ func init() {
 			fmt.Printf("  %v%v\n", EnvPrefix, strings.ToUpper(f.Name))
 		})
 	}
+
+	bufpool = bpool.NewSizedBufferPool(256, 2000)
+	htmlTemplates = make(map[string]*template.Template)
 }
 
-func redirectHTTPS(w http.ResponseWriter, r *http.Request) {
-
+func redirectHTTPSUsingXForwardedHost(w http.ResponseWriter, r *http.Request) {
 	redirectURL := *r.URL
 	redirectURL.Scheme = "https"
 	redirectURL.Host = r.Header.Get("X-Forwarded-Host")
@@ -49,12 +65,42 @@ func redirectHTTPS(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectURL.String(), http.StatusMovedPermanently)
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hi there!")
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	executeTemplateOrError(w, "home.html")
+}
+
+func mapHandler(w http.ResponseWriter, r *http.Request) {
+	executeTemplateOrError(w, "map.html")
+}
+
+func executeTemplateOrError(w http.ResponseWriter, name string) {
+
+    homeTemplate, ok := htmlTemplates[name]
+	if !ok {
+		errorText := fmt.Sprintf("Template Error - Can't find template %v", name)
+		http.Error(w, errorText, http.StatusInternalServerError)
+		return
+	}
+
+	buf := bufpool.Get()
+	defer bufpool.Put(buf)
+
+	err := homeTemplate.Execute(buf, nil)
+	if err != nil {
+		errorText := fmt.Sprintf("Template Error - Can't execute template %v", name)
+		http.Error(w, errorText, http.StatusInternalServerError)
+		return
+	}
+
+	// Set the header and write the buffer to the http.ResponseWriter
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		log.Printf("Error writing to ResponseWriter: %v", err)
+	}
 }
 
 func main() {
-
 	// Process the flags.
 	flag.Parse()
 
@@ -62,23 +108,36 @@ func main() {
 	// environment variables that set them.
 	overrideUnsetFlagsFromEnvironmentVariables()
 
+	// Find the static and templates directories
+	staticDirAbs, err := filepath.Abs(*staticDir)
+	if err != nil {
+		log.Fatalf("Error building absolute path to static directory: %v", err)
+	}
+	templateDirAbs, err := filepath.Abs(*templatesDir)
+	if err != nil {
+		log.Fatalf("Error building absolute path to tempalte directory: %v", err)
+	}
+
+	log.Printf("Using static directory: %v\n", staticDirAbs)
+	log.Printf("Using template directory: %v\n", templateDirAbs)
+
+	err = processTemplates(templateDirAbs)
+	if err != nil {
+		log.Fatalf("Template processing error: %v\n", err)
+	}
+
 	r := mux.NewRouter().StrictSlash(true)
 
 	// Redirect to HTTPS if not in debug mode
 	if !*debug {
 		r.Headers("X-Forwarded-Proto", "http").MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
 			return r.Header.Get("X-Forwarded-Host") != ""
-		}).HandlerFunc(redirectHTTPS)
+		}).HandlerFunc(redirectHTTPSUsingXForwardedHost)
 	}
 
-	r.HandleFunc("/", handler)
-
-	absStaticDir, err := filepath.Abs(*staticDir)
-	if err != nil {
-		log.Fatalf("Error building absolute path to static directory:\n%v", err)
-	}
-
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(absStaticDir))))
+	r.HandleFunc("/", homeHandler)
+	r.HandleFunc("/map", mapHandler)
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticDirAbs))))
 
 	log.Fatalf("FATAL: %v", http.ListenAndServe(*address, r))
 }
@@ -122,4 +181,36 @@ func overrideUnsetFlagsFromEnvironmentVariables() {
 			}
 		}
 	}
+}
+
+// Process the template files so they are ready to access and execute by handlers. 
+func processTemplates(absTemplateDir string) (err error) {
+
+	templateFiles, err := filepath.Glob(filepath.Join(absTemplateDir, "*.html"))
+	if err != nil {
+		return err
+	}
+
+	// The base.html file needs to be present.
+	baseTemplateIndex := -1
+	baseTemplateAbs := ""
+	for i, templateFile := range templateFiles {
+		if filepath.Base(templateFile) == "base.html" {
+			baseTemplateIndex = i
+			baseTemplateAbs = templateFile
+			break
+		}
+	}
+	if baseTemplateIndex == -1 {
+		return errors.New("Can't find base.html")
+	}
+
+	// Delete the base template from the slice
+	templateFiles = append(templateFiles[:baseTemplateIndex], templateFiles[baseTemplateIndex+1:]...)
+
+	for _, templateFile := range templateFiles {
+		htmlTemplates[filepath.Base(templateFile)] = template.Must(template.ParseFiles(baseTemplateAbs, templateFile))
+	}
+
+	return nil
 }
