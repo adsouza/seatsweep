@@ -8,7 +8,25 @@
         <link rel="stylesheet" href="/static/main.css">
     </head>
     <body>
-        {{block "content" .}}<h1>Hello, and welcome to SeatSweep</h1>{{end}}
-        <script src="/static/main.js"></script>
+        <div id="layout">
+            <!-- Menu toggle -->
+            <a href="#menu" id="menuLink" class="menu-link">Menu</a>
+     
+            <div id="menu">
+                <div class="pure-menu">
+                    <div class="pure-menu-heading">Seat<div class="ministutter"></div>Sweep</div>     
+                    <ul class="pure-menu-list">
+                        <li class="pure-menu-item"><a href="/" class="pure-menu-link">Home</a></li>
+                        <li class="pure-menu-item"><a href="/map" class="pure-menu-link">Map</a></li>    
+                    </ul>
+                </div>
+            </div>
+
+            <div id="main">
+            {{block "content" .}}<h1>Hello, and welcome to SeatSweep</h1>{{end}}
+            </div>    
+        </div>    
+        <script src="/static/menu.js"></script>
+        {{ block "extraScripts" .}}{{end}}
     </body>
 </html>

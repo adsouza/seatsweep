@@ -1,1 +1,213 @@
-/* */
+/* Layout, Menus, and Global Theme */
+
+/*
+When setting the primary font stack, apply it to the Pure grid units along
+with `html`, `button`, `input`, `select`, and `textarea`. Pure Grids use
+specific font stacks to ensure the greatest OS/browser compatibility.
+*/
+html, button, input, select, textarea,
+.pure-g [class *= "pure-u"] {
+    /* Set your content font stack here: */
+    font-family: Georgia, Times, "Times New Roman", serif;
+}
+
+/* Dark theme FTW */
+body{
+    background-color: #1d1c1c;
+    color: #d0e9ff;
+}
+
+.content {
+    margin: 0 auto;
+    max-width: 800px;
+    line-height: 1.6em;
+    margin-bottom: 1em;
+    padding: 0 1em;
+}
+
+.header {
+    padding: 1em 0 1em 0;
+    text-align: center;
+    border-bottom: 1px solid #383838;
+ }
+
+.header h1 {
+    margin: 0.2em 0;
+    font-size: 3em;
+    font-weight: 300;
+    letter-spacing: 0.01em;
+    padding: 0 1em;
+}
+
+.header h2{
+    margin: 0.2em 0;
+    font-size: 1.5em;
+    font-weight: 300;
+    padding: 0 1em;
+}
+
+.stutter {
+    width: 0.2em;
+    display: inline-block;
+    border-bottom: 3px solid #0088ff;
+    margin: 0 0.1em 0 0.11em;    
+}
+
+#menu {
+    margin-left: -150px; /* "#menu" width */
+    width: 150px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000; /* so the menu or its navicon stays above all content */
+    background: #0e0e0e;
+    overflow-y: auto;
+    border-right: thin solid #1f1f1f;
+    -webkit-overflow-scrolling: touch;
+}
+
+#menu a {
+    color: #FFE5BA;
+    padding: 2em 0 2em 1em;
+}
+
+#menu .pure-menu,
+#menu .pure-menu ul {
+    border: none;
+    background: transparent;
+}
+
+#menu .pure-menu li a:hover,
+#menu .pure-menu li a:focus {
+    background: #191818;
+    color: #fff3e0;
+    text-shadow: 0px 0px 10px black;
+}
+
+#menu .pure-menu-heading {
+    border-bottom: thin solid #383838;
+    background: inherit;
+    text-transform: none;
+    color: inherit;
+    text-align: center;
+}
+
+.ministutter {
+    width: 0.2em;
+    display: inline-block;
+    border-bottom: 1px solid #0088ff;
+    margin: 0 0.1em 0 0.11em;    
+}
+
+#layout.active #menu {
+    left: 150px;
+    width: 150px;
+}
+
+#layout.active .menu-link {
+    left: 150px;
+}
+
+.menu-link {
+    position: fixed;
+    display: block; 
+    top: 0;
+    left: 0;
+    background: #000;
+    z-index: 10;
+    width: 3em;
+    height: auto;
+    text-align: center;
+    padding: 1em;
+    color: #FFE5BA;
+    text-decoration: none;
+}
+
+.menu-link:hover,
+.menu-link:focus {
+    color: #fff3e0;
+    text-shadow: 0px 0px 10px black;
+    background: #191818;
+}
+
+/* -- Responsive Styles (Media Queries) ------------------------------------- */
+
+/*
+Hides the menu at `48em`, but modify this based on your app's needs.
+*/
+@media (min-width: 48em) {
+
+    #layout {
+        padding-left: 150px;
+        left: 0;
+    }
+
+    #menu {
+        left: 150px;
+    }
+
+    .menu-link {
+        position: fixed;
+        left: 150px;
+        display: none;
+    }
+
+    #layout.active .menu-link {
+        left: 150px;
+    }
+}
+
+@media (max-width: 48em) {
+    /* Only apply this when the window is small. Otherwise, the following
+    case results in extra padding on the left:
+        * Make the window small.
+        * Tap the menu to trigger the active state.
+        * Make the window large again.
+    */
+    #layout.active {
+        position: relative;
+        left: 150px;
+    }
+}
+
+
+/* Transition on menus */
+#layout,
+#menu,
+.menu-link {
+    -webkit-transition: all 0.2s ease-out;
+    -moz-transition: all 0.2s ease-out;
+    -ms-transition: all 0.2s ease-out;
+    -o-transition: all 0.2s ease-out;
+    transition: all 0.2s ease-out;
+}
+
+/* Maps */
+
+#mapwrapper{
+    position: relative;
+    display: inline-block;
+}
+
+#map {
+    display: inline-block;
+}
+
+#canvas {
+    pointer-events:none; 
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+#heatmap {
+    pointer-events:none; 
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}

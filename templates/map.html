@@ -1,4 +1,15 @@
 {{define "pageTitle"}}SeatSweep - Map{{end}}
 {{define "content"}}
-<div>A Map</div>
+<div class="content">
+	<div id="mapwrapper">
+		<canvas id="canvas"></canvas>
+		<canvas id="heatmap"></canvas>
+        <img id="map" class="pure-img" src="https://library.carleton.ca/sites/default/files/floor-maps/MacOdrum-LV5-floorplan-web.png" />
+    </div>
+    <button id="makeheatmap" class="pure-button">Render Heatmap</button>
+</div>
+{{end}}
+{{define "extraScripts"}}
+<script src="/static/simpleheat.js"></script>
+<script src="/static/map.js"></script>
 {{end}}
