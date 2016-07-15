@@ -75,7 +75,7 @@ func mapHandler(w http.ResponseWriter, r *http.Request) {
 
 func executeTemplateOrError(w http.ResponseWriter, name string) {
 
-    homeTemplate, ok := htmlTemplates[name]
+	homeTemplate, ok := htmlTemplates[name]
 	if !ok {
 		errorText := fmt.Sprintf("Template Error - Can't find template %v", name)
 		http.Error(w, errorText, http.StatusInternalServerError)
@@ -183,7 +183,7 @@ func overrideUnsetFlagsFromEnvironmentVariables() {
 	}
 }
 
-// Process the template files so they are ready to access and execute by handlers. 
+// Process the template files so they are ready to access and execute by handlers.
 func processTemplates(absTemplateDir string) (err error) {
 
 	templateFiles, err := filepath.Glob(filepath.Join(absTemplateDir, "*.html"))
