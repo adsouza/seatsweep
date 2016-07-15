@@ -43,7 +43,7 @@ var (
 
 func init() {
 	flag.Usage = func() {
-		fmt.Println("SeatSweep\nVersion 0.0.2")
+		fmt.Println("SeatSweep\nVersion 0.0.3")
 		flag.PrintDefaults()
 		fmt.Println("  The possible environment variables:")
 		flag.VisitAll(func(f *flag.Flag) {
